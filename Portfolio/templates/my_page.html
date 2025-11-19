@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="text-center mb-4">
+        {% if user.profile_image %}
+            <img src="{{ user.profile_image.url }}" class="rounded-circle" width="100" height="100">
+        {% endif %} 
+        <h3 class="mt-2">{{ user.username }}</h3>
+        <p class="text-muted">{{ user.bio }}</p>
+
+
+        <a class="btn btn-primary" href="{% url 'portfolio_create' %}">
+            新しい作品を投稿
+        </a>
+    </div>
+
+    
+    <div class="row row-cols-2 row-cols-md-3 g-3">
+        {% for p in portfolios %}
+            <div class="col-6 col-md-4 col-lg-3 mb-4">
+                <a href="{% url 'portfolio_detail' p.pk %}" class="text-decoration-none text-dark">
+                    <img src="{{ p.thumbnail.url }}" class="img-fluid rounded" style="height:220px; object-fit:cover;">
+
+                        <div class="d-flex align-items-center justify-content-between mt-2">
+                            <div class="fw-bold text-truncate" style="font-size: 0.95rem; max-width: 70%;">
+                                {{ p.title }}
+                            </div>
+                            <div>
+                                {% for tag in p.tags.all %}
+                                    <span class="badge bg-secondary" style="font-size: 0.65rem;">
+                                        {{ tag.name }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                </a>
+            </div>
+        {% empty %}
+            <p class="text-center text-muted">作品がありません。</p>
+        {% endfor %}
+    </div>
+
+
+</div>
+
+{% endblock %}
