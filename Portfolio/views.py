@@ -1,11 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
+from django.db.models import Count
 
 from .models import Portfolio
 from .forms import PortfolioForm
-
-from taggit.models import Tag  
+from taggit.models import Tag
 
 
 def home(request):
@@ -31,16 +31,31 @@ def portfolio_create(request):
         if form.is_valid():
             portfolio = form.save(commit=False)
             portfolio.user = request.user
-            portfolio.save()
-            form.save_m2m()  
+            portfolio.save()  # まず保存してPKを取得
+            
+            # タグの処理 - set()の代わりに文字列をそのまま渡す
+            tags_data = request.POST.get('tags', '')
+            print(f"DEBUG - tags_data from POST: {tags_data}")  # デバッグ用
+            
+            if tags_data:
+                # taggitは "tag1, tag2, tag3" の形式を受け付ける
+                portfolio.tags.add(*[tag.strip() for tag in tags_data.split(',') if tag.strip()])
+            
             return redirect("my_page")
     else:
         form = PortfolioForm()
-
-    return render(request, "portfolio_create.html", {"form": form})
+    
+    # 使用頻度順にタグを取得
+    popular_tags = Tag.objects.annotate(
+        usage_count=Count('taggit_taggeditem_items')
+    ).filter(usage_count__gt=0).order_by('-usage_count', 'name')[:50]
+    
+    return render(request, "portfolio_create.html", {
+        "form": form,
+        "popular_tags": popular_tags
+    })
 
 
 def logout_view(request):
     logout(request)
     return redirect('home')
-
