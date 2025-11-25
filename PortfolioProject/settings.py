@@ -158,3 +158,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGOUT_REDIRECT_URL = 'home'
 
+
+
+
+TAGGIT_TAGS_FROM_STRING = 'taggit.utils.parse_tags'

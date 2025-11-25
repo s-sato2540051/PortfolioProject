@@ -33,30 +33,36 @@
         {% for p in portfolios %}
             <div class="col-6 col-md-4 col-lg-3">
                 <a href="{% url 'portfolio_detail' p.pk %}" class="text-decoration-none text-dark">
-                    <img src="{{ p.thumbnail.url }}" class="img-fluid rounded"style="height:220px; object-fit:cover;">
+                    <img src="{{ p.thumbnail.url }}" class="img-fluid rounded" style="height:220px; width:100%; object-fit:cover;">
 
-                    <div class="d-flex align-items-center justify-content-between mt-2">
-                        <div class="fw-bold" style="font-size: 0.95rem; max-width: 75%;">
-                            {{ p.title|truncatechars:20 }}  
+                    <div class="mt-2">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="fw-bold text-truncate" style="font-size: 0.95rem; max-width: 70%;">
+                                {{ p.title|truncatechars:20 }}  
+                            </div>
+
+                            <div>
+                                {% for tag in p.tags.all|slice:":2" %}
+                                    <span class="badge bg-secondary" style="font-size: 0.65rem;">
+                                        {{ tag.name }}
+                                    </span>
+                                {% endfor %}
+                            </div>
                         </div>
 
-                        <div>
-                            {% for tag in p.tags.all %}
-                                <span class="badge bg-secondary" style="font-size: 0.65rem;">
-                                    {{ tag.name }}
-                                </span>
-                            {% endfor %}
-                        </div>
-
-                        {% if p.user.profile_image %}
-                            <img src="{{ p.user.profile_image.url }}"
-                                 class="rounded-circle"
-                                 style="width:32px; height:32px; object-fit:cover;">
-                        {% else %}
-                            <img src="{% static 'Portfolio/img/default_user.png' %}"
-                                 class="rounded-circle"
-                                 style="width:32px; height:32px; object-fit:cover;">
-                        {% endif %}
+                        <!-- ユーザー情報（クリック可能） -->
+                        <a href="{% url 'user_page' p.user.username %}" class="d-flex align-items-center mt-2 text-decoration-none text-dark">
+                            {% if p.user.profile_image %}
+                                <img src="{{ p.user.profile_image.url }}"
+                                     class="rounded-circle"
+                                     style="width:24px; height:24px; object-fit:cover;">
+                            {% else %}
+                                <img src="{% static 'Portfolio/img/default_user.png' %}"
+                                     class="rounded-circle"
+                                     style="width:24px; height:24px; object-fit:cover;">
+                            {% endif %}
+                            <span class="ms-2" style="font-size: 0.85rem;">{{ p.user.username }}</span>
+                        </a>
                     </div>
                 </a>
             </div>
@@ -66,7 +72,4 @@
     </div>
 </section>
 
-
 {% endblock %}
-
-

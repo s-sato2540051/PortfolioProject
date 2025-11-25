@@ -4,7 +4,7 @@
 <div class="container py-4" style="max-width: 700px;">
     <h2 class="mb-3">作品を投稿</h2>
 
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" id="portfolio-form">
         {% csrf_token %}
 
         <div class="mb-3">
@@ -22,6 +22,57 @@
             {{ form.thumbnail }}
         </div>
 
+        <!-- 追加画像 -->
+        <div class="mb-3">
+            <label class="form-label">追加画像（最大4枚・任意）</label>
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="image-upload-wrapper">
+                        <label for="id_image1" class="image-upload-label">
+                            <div class="image-preview" id="preview1">
+                                <div class="upload-icon">+</div>
+                                <span>画像を選択</span>
+                            </div>
+                        </label>
+                        <input type="file" id="id_image1" name="image1" accept="image/*" class="d-none image-input" data-preview="preview1">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="image-upload-wrapper">
+                        <label for="id_image2" class="image-upload-label">
+                            <div class="image-preview" id="preview2">
+                                <div class="upload-icon">+</div>
+                                <span>画像を選択</span>
+                            </div>
+                        </label>
+                        <input type="file" id="id_image2" name="image2" accept="image/*" class="d-none image-input" data-preview="preview2">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="image-upload-wrapper">
+                        <label for="id_image3" class="image-upload-label">
+                            <div class="image-preview" id="preview3">
+                                <div class="upload-icon">+</div>
+                                <span>画像を選択</span>
+                            </div>
+                        </label>
+                        <input type="file" id="id_image3" name="image3" accept="image/*" class="d-none image-input" data-preview="preview3">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="image-upload-wrapper">
+                        <label for="id_image4" class="image-upload-label">
+                            <div class="image-preview" id="preview4">
+                                <div class="upload-icon">+</div>
+                                <span>画像を選択</span>
+                            </div>
+                        </label>
+                        <input type="file" id="id_image4" name="image4" accept="image/*" class="d-none image-input" data-preview="preview4">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="form-check mb-3">
             {{ form.is_public }}
             <label class="form-check-label">公開する</label>
@@ -34,13 +85,11 @@
                 <option value="{{ tag.name }}">{{ tag.name }}</option>
                 {% endfor %}
             </select>
-            <!-- 実際にフォームで送信される隠しフィールド -->
             <input type="hidden" id="tag-input" name="tags" value="">
             <small class="form-text text-muted d-block mt-1">
                 既存のタグから選択、または新しいタグを入力できます
             </small>
             
-            <!-- 人気タグの表示 -->
             {% if popular_tags %}
             <div class="mt-2">
                 <small class="text-muted">人気のタグ:</small>
@@ -55,8 +104,18 @@
             {% endif %}
         </div>
 
+        <!-- 共同制作者 -->
         <div class="mb-3">
-            <label class="form-label">外部リンク</label>
+            <label class="form-label">共同制作者（任意）</label>
+            <div id="coauthors-container"></div>
+            <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-coauthor-btn">
+                + 共同制作者を追加
+            </button>
+            <input type="hidden" id="coauthors-data" name="coauthors_data" value="[]">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">外部リンク（任意）</label>
             {{ form.external_link }}
         </div>
 
@@ -86,11 +145,85 @@
     margin: 2px;
 }
 
+.coauthor-item {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.coauthor-type-selector {
+    margin-bottom: 10px;
+}
+
+/* 画像アップロードのスタイル */
+.image-upload-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 100%; /* 1:1の正方形 */
+}
+
+.image-upload-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    margin: 0;
+}
+
+.image-preview {
+    width: 100%;
+    height: 100%;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    transition: all 0.3s;
+    overflow: hidden;
+}
+
+.image-preview:hover {
+    border-color: #0d6efd;
+    background: #e7f1ff;
+}
+
+.image-preview i,
+.image-preview .upload-icon {
+    font-size: 2rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    font-weight: 300;
+}
+
+.image-preview span {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-preview.has-image {
+    border-style: solid;
+    border-color: #28a745;
+}
+
+.image-preview.has-image:hover {
+    border-color: #218838;
+}
 </style>
 
 <script>
 $(document).ready(function() {
-    // Select2の初期化
+    // タグ機能の初期化
     $('#tag-select').select2({
         tags: true,
         tokenSeparators: [',', ' '],
@@ -108,15 +241,11 @@ $(document).ready(function() {
         }
     });
     
-    // Select2の値が変更されたら隠しフィールドを更新
     $('#tag-select').on('change', function() {
         var selectedValues = $(this).val() || [];
-        // 配列をカンマ区切りの文字列に変換
         var tagsString = selectedValues.join(',');
         $('#tag-input').val(tagsString);
-        console.log('Tags updated:', tagsString); // デバッグ用
         
-        // ボタンの状態を更新
         $('.tag-btn').each(function() {
             var tagName = $(this).data('tag');
             if (selectedValues.includes(tagName)) {
@@ -127,36 +256,128 @@ $(document).ready(function() {
         });
     });
     
-    // 人気タグボタンのクリックイベント
     $('.tag-btn').on('click', function(e) {
         e.preventDefault();
         var tagName = $(this).data('tag');
-        
-        // 現在選択されているタグを取得
         var currentValues = $('#tag-select').val() || [];
         
-        // 既に選択されているかチェック
         if (currentValues.includes(tagName)) {
-            // 既に選択されている場合は削除
             currentValues = currentValues.filter(function(value) {
                 return value !== tagName;
             });
         } else {
-            // 選択されていない場合は追加
             currentValues.push(tagName);
         }
         
-        // 値を更新
         $('#tag-select').val(currentValues).trigger('change');
     });
     
-    // フォーム送信前に隠しフィールドの値を確認
-    $('form').on('submit', function() {
+    $('#portfolio-form').on('submit', function() {
         var selectedValues = $('#tag-select').val() || [];
         var tagsString = selectedValues.join(',');
         $('#tag-input').val(tagsString);
-        console.log('Submitting tags:', tagsString); // デバッグ用
         return true;
+    });
+
+    // 共同制作者機能
+    let coauthorIndex = 0;
+
+    function updateCoauthorsData() {
+        const coauthors = [];
+        $('.coauthor-item').each(function() {
+            const type = $(this).find('.coauthor-type').val();
+            if (type === 'internal') {
+                const username = $(this).find('.internal-username').val().trim();
+                if (username) {
+                    coauthors.push({ type: 'internal', username: username });
+                }
+            } else if (type === 'external') {
+                const name = $(this).find('.external-name').val().trim();
+                const url = $(this).find('.external-url').val().trim();
+                if (name) {
+                    coauthors.push({ type: 'external', name: name, url: url });
+                }
+            }
+        });
+        $('#coauthors-data').val(JSON.stringify(coauthors));
+    }
+
+    function addCoauthorField() {
+        const index = coauthorIndex++;
+        const html = `
+            <div class="coauthor-item" data-index="${index}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="coauthor-type-selector flex-grow-1">
+                        <select class="form-select form-select-sm coauthor-type" data-index="${index}">
+                            <option value="">選択してください</option>
+                            <option value="internal">このサービスのユーザー</option>
+                            <option value="external">外部アカウント（Twitter/YouTube等）</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-danger remove-coauthor ms-2" data-index="${index}">×</button>
+                </div>
+                <div class="coauthor-fields" data-index="${index}"></div>
+            </div>
+        `;
+        $('#coauthors-container').append(html);
+    }
+
+    $(document).on('change', '.coauthor-type', function() {
+        const index = $(this).data('index');
+        const type = $(this).val();
+        const fieldsContainer = $(`.coauthor-fields[data-index="${index}"]`);
+        
+        if (type === 'internal') {
+            fieldsContainer.html(`
+                <input type="text" class="form-control internal-username" placeholder="ユーザー名を入力">
+            `);
+        } else if (type === 'external') {
+            fieldsContainer.html(`
+                <div class="row g-2">
+                    <div class="col-5">
+                        <input type="text" class="form-control external-name" placeholder="名前">
+                    </div>
+                    <div class="col-7">
+                        <input type="url" class="form-control external-url" placeholder="URL（任意）">
+                    </div>
+                </div>
+            `);
+        } else {
+            fieldsContainer.html('');
+        }
+        updateCoauthorsData();
+    });
+
+    $(document).on('input', '.internal-username, .external-name, .external-url', function() {
+        updateCoauthorsData();
+    });
+
+    $(document).on('click', '.remove-coauthor', function() {
+        const index = $(this).data('index');
+        $(`.coauthor-item[data-index="${index}"]`).remove();
+        updateCoauthorsData();
+    });
+
+    $('#add-coauthor-btn').on('click', function() {
+        addCoauthorField();
+    });
+
+    // 画像プレビュー機能
+    $('.image-input').on('change', function() {
+        const input = this;
+        const previewId = $(this).data('preview');
+        const preview = $('#' + previewId);
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.html(`<img src="${e.target.result}" alt="プレビュー">`);
+                preview.addClass('has-image');
+            };
+            
+            reader.readAsDataURL(input.files[0]);
+        }
     });
 });
 </script>

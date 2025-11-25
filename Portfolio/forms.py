@@ -1,5 +1,5 @@
 from django import forms
-from .models import Portfolio
+from .models import Portfolio, PortfolioImage, CoAuthor
 from taggit.models import Tag
 from django.db.models import Count
 
@@ -12,6 +12,11 @@ class PortfolioForm(forms.ModelForm):
             "style": "display:none;"
         })
     )
+    
+    image1 = forms.ImageField(required=False, label="追加画像1")
+    image2 = forms.ImageField(required=False, label="追加画像2")
+    image3 = forms.ImageField(required=False, label="追加画像3")
+    image4 = forms.ImageField(required=False, label="追加画像4")
     
     class Meta:
         model = Portfolio
@@ -26,5 +31,7 @@ class PortfolioForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # 既存のタグを初期値として設定
         if self.instance.pk:
             self.initial['tags'] = ','.join([tag.name for tag in self.instance.tags.all()])
+            
