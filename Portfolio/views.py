@@ -61,10 +61,8 @@ def portfolio_detail(request, pk):
     if request.user.is_authenticated:
         is_liked = p.likes.filter(user=request.user).exists()
     
-    # 共同制作者の外部アカウントを整形
+    # 共同制作者の外部アカウントをそれっぽくする
     coauthors_processed = []
-    # **注意**: ここでのアイコン・色判定は以前のロジックに基づいており、views.py側でブランドカラー（bg_color）を定義していないため、ここでは便宜的にicon_colorを使用します。
-    # 共同制作者の表示はテンプレート側で行うため、このビューのロジックは既存のまま維持します。
     for coauthor in p.coauthors.all():
         if coauthor.user:
             coauthors_processed.append({
@@ -72,30 +70,30 @@ def portfolio_detail(request, pk):
                 'user': coauthor.user
             })
         else:
-            # 外部アカウントを分割
             if '|' in coauthor.ex_account:
                 name, url = coauthor.ex_account.split('|', 1)
                 
                 # URLからアイコンを判定
                 icon = 'bi-link-45deg'
-                bg_color = '#6c757d' # デフォルト
+                bg_color = '#6c757d' # デフォ
                 
                 if 'twitter.com' in url or 'x.com' in url:
                     icon = 'bi-twitter-x'
-                    bg_color = '#000000' # X Black
+                    bg_color = '#000000' 
                 elif 'youtube.com' in url or 'youtu.be' in url:
                     icon = 'bi-youtube'
-                    bg_color = '#FF0000' # YouTube Red
+                    bg_color = '#FF0000' 
                 elif 'github.com' in url:
                     icon = 'bi-github'
-                    bg_color = '#333333' # GitHub Dark
+                    bg_color = '#333333'
                 
                 coauthors_processed.append({
                     'type': 'external',
                     'name': name,
                     'url': url,
                     'icon': icon,
-                    'bg_color': bg_color # bg_colorを使用
+                    'bg_color': bg_color 
+                    
                 })
             else:
                 coauthors_processed.append({
@@ -105,48 +103,37 @@ def portfolio_detail(request, pk):
     
     return render(request, "portfolio_detail.html", {
             "portfolio": p,
-            # "coauthors_processed": coauthors_processed, # 既存のコンテキストがあれば残す
-            "is_liked": is_liked # ★これをコンテキストに追加★
+            "is_liked": is_liked 
         })
 
 
-@login_required # ログインしていないと実行できない
-@require_POST # POSTメソッドのみ許可
+@login_required
+@require_POST 
 def like_toggle(request, pk):
     """
     作品のいいねを切り替える (トグル) API
     """
     try:
-        # UUIDをpkとして受け取っていると仮定
         portfolio = Portfolio.objects.get(pk=pk)
     except Portfolio.DoesNotExist:
-        # 作品が存在しない場合は404エラーを返す
         raise Http404("作品が見つかりません。")
 
     user = request.user
     
     # 既にいいね済みか確認
-    # p.likes.filter(user=request.user) は p.liked_by.filter(user=request.user) とほぼ同等
     is_liked = Like.objects.filter(user=user, portfolio=portfolio).exists()
     
     if is_liked:
-        # いいねを解除 (削除)
         Like.objects.filter(user=user, portfolio=portfolio).delete()
         new_status = False
     else:
-        # いいねを登録 (作成)
         try:
-            # Like.objects.create(user=user, portfolio=portfolio)
-            # IntegrityErrorを防ぐためget_or_createを使うか、
-            # your_model.pyのunique_together設定に頼る
             Like.objects.create(user=user, portfolio=portfolio)
             new_status = True
         except IntegrityError:
-            # 稀に発生する重複登録エラーを防ぐための念のため
-            new_status = False # 作成失敗
+            new_status = False 
 
     # いいねの総数を取得
-    # あなたのモデル設計(related_name='likes')に合わせ p.likes.count() を使用
     like_count = portfolio.likes.count() 
 
     return JsonResponse({
@@ -168,7 +155,6 @@ def portfolio_create(request):
             # タグの処理
             tags_data = form.cleaned_data.get('tags', '')
             if tags_data:
-                # テンプレート側の処理により、tags_dataはカンマ区切りの文字列を想定
                 tags_data = tags_data.replace("'", "").replace('"', '').replace('[', '').replace(']', '')
                 tag_list = [tag.strip() for tag in tags_data.split(',') if tag.strip()]
                 
@@ -191,7 +177,6 @@ def portfolio_create(request):
                 
                 for coauthor in coauthors:
                     if coauthor.get('type') == 'internal':
-                        # テンプレートから渡されるのはユーザーID
                         user_id = coauthor.get('user_id', '').strip()
                         if user_id:
                             try:
@@ -216,7 +201,6 @@ def portfolio_create(request):
     else:
         form = PortfolioForm()
     
-    # 投稿フォームの表示時に使用頻度順にタグを取得 (Ajaxではなく、人気のタグボタン用)
     popular_tags = Tag.objects.annotate(
         usage_count=Count('taggit_taggeditem_items')
     ).filter(usage_count__gt=0).order_by('-usage_count', 'name')[:50]
@@ -244,12 +228,10 @@ def user_search_api(request):
         # 自分以外のユーザーを検索
         users = User.objects.filter(username__icontains=term).exclude(id=request.user.id if request.user.is_authenticated else None)[:10]
     else:
-        # 何も入力がない場合は最近のユーザーなどを返す（ここでは簡略化のため空リストまたは少数を返す）
         users = [] 
     
     results = []
     for user in users:
-        # 注意: ユーザーモデルに profile_image があることを前提としています
         profile_image_url = user.profile_image.url if hasattr(user, 'profile_image') and user.profile_image else '/static/Portfolio/img/default_user.png'
         
         results.append({
@@ -266,10 +248,8 @@ def tag_search_api(request):
     term = request.GET.get('term', '')
     
     if term:
-        # 入力された文字列を含むタグを検索
         tags = Tag.objects.filter(name__icontains=term).order_by('name')[:50]
     else:
-        # 何も入力がない場合は、人気のタグを返す
         tags = Tag.objects.annotate(
             usage_count=Count('taggit_taggeditem_items')
         ).filter(usage_count__gt=0).order_by('-usage_count', 'name')[:20]
@@ -277,7 +257,7 @@ def tag_search_api(request):
     results = []
     for tag in tags:
         results.append({
-            'id': tag.name,  # IDもテキストもタグ名にする
+            'id': tag.name, 
             'text': tag.name,
         })
     
@@ -301,7 +281,6 @@ def portfolio_edit(request, pk):
             portfolio = form.save(commit=False)
             portfolio.save()
             
-            # タグの更新（既存のタグを削除してから追加）
             portfolio.tags.clear()
             tags_data = form.cleaned_data.get('tags', '')
             if tags_data:
@@ -310,7 +289,6 @@ def portfolio_edit(request, pk):
                 for tag in tag_list:
                     portfolio.tags.add(tag)
             
-            # 追加画像の更新（既存の画像を削除してから追加）
             portfolio.images.all().delete()
             for i in range(1, 5):
                 image = form.cleaned_data.get(f'image{i}')
@@ -321,7 +299,6 @@ def portfolio_edit(request, pk):
                         order=i
                     )
             
-            # 共同制作者の更新（既存の共同制作者を削除してから追加）
             portfolio.coauthors.all().delete()
             coauthors_data = request.POST.get('coauthors_data', '[]')
             try:
@@ -353,12 +330,10 @@ def portfolio_edit(request, pk):
     else:
         form = PortfolioForm(instance=portfolio)
     
-    # 投稿フォームの表示時に使用頻度順にタグを取得
     popular_tags = Tag.objects.annotate(
         usage_count=Count('taggit_taggeditem_items')
     ).filter(usage_count__gt=0).order_by('-usage_count', 'name')[:50]
     
-    # 既存の共同制作者情報を取得
     existing_coauthors = []
     for coauthor in portfolio.coauthors.all():
         if coauthor.user:
@@ -383,13 +358,14 @@ def portfolio_edit(request, pk):
                     'url': ''
                 })
     
-    # 既存の追加画像を取得
     existing_images = list(portfolio.images.all().order_by('order'))
     
-    return render(request, "portfolio_create.html", {  # portfolio_create.htmlを使用
+    return render(request, "portfolio_create.html", { 
         "form": form,
-        "portfolio": portfolio,  # 編集モードであることを示すため
+        "portfolio": portfolio,  
         "popular_tags": popular_tags,
         "existing_coauthors": json.dumps(existing_coauthors),
         "existing_images": existing_images,
     })
+    
+

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Portfolio, PortfolioImage, CoAuthor
+from .models import Portfolio, PortfolioImage, CoAuthor, Contact
 from taggit.models import Tag
 from django.db.models import Count
 
@@ -34,4 +34,67 @@ class PortfolioForm(forms.ModelForm):
         # 既存のタグを初期値として設定
         if self.instance.pk:
             self.initial['tags'] = ','.join([tag.name for tag in self.instance.tags.all()])
-            
+
+
+class SupportContactForm(forms.ModelForm):
+    """運営へのお問い合わせフォーム"""
+    class Meta:
+        model = Contact
+        fields = ['sender_name', 'sender_email', 'subject', 'message']
+        widgets = {
+            'sender_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'お名前'
+            }),
+            'sender_email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'メールアドレス'
+            }),
+            'subject': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '件名'
+            }),
+            'message': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'お問い合わせ内容',
+                'rows': 6
+            }),
+        }
+        labels = {
+            'sender_name': 'お名前',
+            'sender_email': 'メールアドレス',
+            'subject': '件名',
+            'message': 'お問い合わせ内容',
+        }
+
+
+class PortfolioContactForm(forms.ModelForm):
+    """作品作者へのコンタクトフォーム"""
+    class Meta:
+        model = Contact
+        fields = ['sender_name', 'sender_email', 'subject', 'message']
+        widgets = {
+            'sender_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'お名前'
+            }),
+            'sender_email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'メールアドレス'
+            }),
+            'subject': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '件名'
+            }),
+            'message': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'メッセージ',
+                'rows': 6
+            }),
+        }
+        labels = {
+            'sender_name': 'お名前',
+            'sender_email': 'メールアドレス',
+            'subject': '件名',
+            'message': 'メッセージ',
+        }

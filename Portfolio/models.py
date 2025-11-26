@@ -62,3 +62,32 @@ class Like(models.Model):
 
     class Meta:
         unique_together = ("user", "portfolio")
+
+
+class Contact(models.Model):
+    """お問い合わせ・コンタクト"""
+    CONTACT_TYPE_CHOICES = [
+        ('support', '運営へのお問い合わせ'),
+        ('portfolio', '作品作者へのコンタクト'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    contact_type = models.CharField(max_length=20, choices=CONTACT_TYPE_CHOICES)
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="sent_contacts")
+    sender_name = models.CharField(max_length=100)
+    sender_email = models.EmailField()
+    
+    # 作品作者へのコンタクトの場合
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, null=True, blank=True, related_name="contacts")
+    recipient = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="received_contacts")
+    
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.get_contact_type_display()} - {self.subject}"
