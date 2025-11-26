@@ -6,22 +6,26 @@
 <div class="container py-4">
     <div class="text-center mb-4">
         {% if user.profile_image %}
-            <img src="{{ user.profile_image.url }}" class="rounded-circle" width="100" height="100">
+            <img src="{{ user.profile_image.url }}" class="rounded-circle" width="100" height="100" style="object-fit: cover;">
         {% endif %} 
         <h3 class="mt-2">{{ user.username }}</h3>
         <p class="text-muted">{{ user.bio }}</p>
 
-
-        <a class="btn btn-primary" href="{% url 'portfolio_create' %}">
-            新しい作品を投稿
-        </a>
+        <div class="d-flex justify-content-center gap-2 mt-3">
+            <a class="btn btn-primary" href="{% url 'portfolio_create' %}">
+                新しい作品を投稿
+            </a>
+            <a class="btn btn-outline-secondary" href="{% url 'profile_edit' %}">
+                プロフィール編集
+            </a>
+        </div>
     </div>
     
     <div class="row row-cols-2 row-cols-md-3 g-3">
         {% for p in portfolios %}
             <div class="col-6 col-md-4 col-lg-3 mb-4">
                 <a href="{% url 'portfolio_detail' p.pk %}" class="text-decoration-none text-dark">
-                    <img src="{{ p.thumbnail.url }}" class="img-fluid rounded" style="height:220px; object-fit:cover;">
+                    <img src="{{ p.thumbnail.url }}" class="img-fluid rounded" style="height:220px; width:100%; object-fit:cover;">
 
                         <div class="d-flex align-items-center justify-content-between mt-2">
                             <div class="fw-bold text-truncate" style="font-size: 0.95rem; max-width: 70%;">

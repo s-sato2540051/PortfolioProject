@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container py-4" style="max-width: 700px;">
-    <h2 class="mb-3">{% if portfolio %}作品を編集{% else %}作品を投稿{% endif %}</h2>
+    <h2 class="mb-3">作品を編集</h2>
 
     <form method="post" enctype="multipart/form-data" id="portfolio-form">
         {% csrf_token %}
@@ -22,6 +22,12 @@
 
         <div class="mb-3">
             <label class="form-label">サムネイル</label>
+            {% if portfolio.thumbnail %}
+                <div class="mb-2">
+                    <img src="{{ portfolio.thumbnail.url }}" class="img-fluid rounded" style="max-width: 200px;">
+                    <p class="text-muted small mt-1">現在のサムネイル（変更する場合は新しい画像を選択してください）</p>
+                </div>
+            {% endif %}
             {{ form.thumbnail }}
             {% for error in form.thumbnail.errors %}
                 <small class="text-danger">{{ error }}</small>
@@ -31,72 +37,29 @@
         <div class="mb-3">
             <label class="form-label">追加画像（最大4枚・任意）</label>
             <div class="row g-3">
+                {% for i in "1234" %}
                 <div class="col-6 col-md-3">
                     <div class="image-upload-wrapper">
-                        <label for="id_image1" class="image-upload-label">
-                            <div class="image-preview" id="preview1">
-                                {% if existing_images.0 %}
-                                    <img src="{{ existing_images.0.image.url }}" alt="既存の画像">
-                                {% else %}
-                                    <div class="upload-icon">+</div>
-                                    <span>画像を選択</span>
-                                {% endif %}
+                        <label for="id_image{{ i }}" class="image-upload-label">
+                            <div class="image-preview" id="preview{{ i }}">
+                                {% with existing_images|default_if_none:''|slice:forloop.counter0|first as existing_image %}
+                                    {% if existing_image %}
+                                        <img src="{{ existing_image.image.url }}" alt="既存の画像">
+                                    {% else %}
+                                        <div class="upload-icon">+</div>
+                                        <span>画像を選択</span>
+                                    {% endif %}
+                                {% endwith %}
                             </div>
                         </label>
-                        <input type="file" id="id_image1" name="image1" accept="image/*" class="d-none image-input" data-preview="preview1">
+                        <input type="file" id="id_image{{ i }}" name="image{{ i }}" accept="image/*" class="d-none image-input" data-preview="preview{{ i }}">
                     </div>
                 </div>
-                <div class="col-6 col-md-3">
-                    <div class="image-upload-wrapper">
-                        <label for="id_image2" class="image-upload-label">
-                            <div class="image-preview" id="preview2">
-                                {% if existing_images.1 %}
-                                    <img src="{{ existing_images.1.image.url }}" alt="既存の画像">
-                                {% else %}
-                                    <div class="upload-icon">+</div>
-                                    <span>画像を選択</span>
-                                {% endif %}
-                            </div>
-                        </label>
-                        <input type="file" id="id_image2" name="image2" accept="image/*" class="d-none image-input" data-preview="preview2">
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="image-upload-wrapper">
-                        <label for="id_image3" class="image-upload-label">
-                            <div class="image-preview" id="preview3">
-                                {% if existing_images.2 %}
-                                    <img src="{{ existing_images.2.image.url }}" alt="既存の画像">
-                                {% else %}
-                                    <div class="upload-icon">+</div>
-                                    <span>画像を選択</span>
-                                {% endif %}
-                            </div>
-                        </label>
-                        <input type="file" id="id_image3" name="image3" accept="image/*" class="d-none image-input" data-preview="preview3">
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="image-upload-wrapper">
-                        <label for="id_image4" class="image-upload-label">
-                            <div class="image-preview" id="preview4">
-                                {% if existing_images.3 %}
-                                    <img src="{{ existing_images.3.image.url }}" alt="既存の画像">
-                                {% else %}
-                                    <div class="upload-icon">+</div>
-                                    <span>画像を選択</span>
-                                {% endif %}
-                            </div>
-                        </label>
-                        <input type="file" id="id_image4" name="image4" accept="image/*" class="d-none image-input" data-preview="preview4">
-                    </div>
-                </div>
+                {% endfor %}
             </div>
-            {% if portfolio %}
             <small class="form-text text-muted d-block mt-2">
                 新しい画像を選択すると、既存の追加画像はすべて置き換えられます
             </small>
-            {% endif %}
         </div>
 
         <div class="form-check mb-3">
@@ -144,12 +107,12 @@
             {{ form.external_link }}
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">{% if portfolio %}更新{% else %}投稿{% endif %}</button>
-        {% if portfolio %}
+        <button type="submit" class="btn btn-primary w-100">更新</button>
         <a href="{% url 'portfolio_detail' portfolio.pk %}" class="btn btn-outline-secondary w-100 mt-2">キャンセル</a>
-        {% endif %}
     </form>
 </div>
+
+
 
 <style>
 .select2-container--default .select2-selection--multiple {
@@ -167,11 +130,9 @@
     margin: 3px;
 }
 
-/* Select2のユーザー検索結果の画像表示 */
 .select2-container--default .select2-results__option--highlighted[aria-selected] img {
     border: 1px solid #fff; 
 }
-
 
 .tag-btn {
     font-size: 0.85rem;
@@ -190,11 +151,10 @@
     margin-bottom: 10px;
 }
 
-/* 画像アップロードのスタイル */
 .image-upload-wrapper {
     position: relative;
     width: 100%;
-    padding-top: 100%; /* 1:1の正方形 */
+    padding-top: 100%;
 }
 
 .image-upload-label {
@@ -331,7 +291,7 @@ function initializeUserSearch(selectElement) {
 
 $(document).ready(function() {
     
-    // --- 1. タグ機能の初期化 (Ajax対応) ---
+    // --- 1. タグ機能の初期化 ---
     $('#tag-select').select2({
         tags: true,
         tokenSeparators: [',', ' '],
@@ -339,7 +299,6 @@ $(document).ready(function() {
         width: "100%",
         multiple: true,
         allowClear: true,
-        
         ajax: {
             url: "{% url 'tag_search_api' %}", 
             dataType: 'json',
@@ -356,7 +315,6 @@ $(document).ready(function() {
             },
             cache: true
         },
-        
         language: {
             noResults: function() {
                 return "既存のタグが見つかりません。新しいタグとして追加できます";
@@ -365,24 +323,18 @@ $(document).ready(function() {
                 return "タグを検索中...";
             }
         },
-        minimumInputLength: 1 
+        minimumInputLength: 1
     });
     
-    // 編集モードの場合、既存のタグをSelect2に設定
-    {% if portfolio %}
-    const existingTags = [{% for tag in portfolio.tags.all %}"{{ tag.name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-    if (existingTags.length > 0) {
-        $('#tag-select').val(existingTags).trigger('change');
-    }
-    {% endif %}
+    // 既存のタグをSelect2に設定
+    const existingTags = "{{ portfolio.tags.all|join:',' }}".split(',').filter(tag => tag.trim() !== '');
+    $('#tag-select').val(existingTags).trigger('change');
     
-    // Select2の値が変更されたら hidden input を更新
     $('#tag-select').on('change', function() {
         var selectedValues = $(this).val() || [];
         var tagsString = selectedValues.join(',');
         $('#tag-input').val(tagsString);
         
-        // 人気のタグボタンの見た目の更新
         $('.tag-btn').each(function() {
             var tagName = $(this).data('tag');
             if (selectedValues.includes(tagName)) {
@@ -393,7 +345,6 @@ $(document).ready(function() {
         });
     });
     
-    // 人気のタグボタンのクリックイベント
     $('.tag-btn').on('click', function(e) {
         e.preventDefault();
         var tagName = $(this).data('tag');
@@ -410,7 +361,6 @@ $(document).ready(function() {
         $('#tag-select').val(currentValues).trigger('change');
     });
     
-    // フォーム送信時に hidden input を再確認
     $('#portfolio-form').on('submit', function() {
         var selectedValues = $('#tag-select').val() || [];
         var tagsString = selectedValues.join(',');
@@ -418,18 +368,15 @@ $(document).ready(function() {
         return true;
     });
 
-    // --- 2. 共同制作者機能 (Ajax検索対応) ---
+    // --- 2. 共同制作者機能 ---
     let coauthorIndex = 0;
     
-    // 編集モードの場合、既存の共同制作者を読み込む
-    {% if existing_coauthors %}
+    // 既存の共同制作者を読み込む
     const existingCoauthors = {{ existing_coauthors|safe }};
     existingCoauthors.forEach(coauthor => {
         addCoauthorField(coauthor);
     });
-    {% endif %}
     
-    // 共同制作者のデータ（JSON）を更新する関数
     function updateCoauthorsData() {
         const coauthors = [];
         $('.coauthor-item').each(function() {
@@ -450,7 +397,6 @@ $(document).ready(function() {
         $('#coauthors-data').val(JSON.stringify(coauthors));
     }
 
-    // 共同制作者フィールドを追加する関数
     function addCoauthorField(existingData = null) {
         const index = coauthorIndex++;
         const html = `
@@ -478,7 +424,7 @@ $(document).ready(function() {
                     const selectElement = $(`.internal-user-select[data-index="${index}"]`);
                     const newOption = new Option(existingData.username, existingData.user_id, true, true);
                     selectElement.append(newOption).trigger('change');
-                    $(`.internal-user-id`).last().val(existingData.user_id);
+                    $(`.internal-user-id[data-index="${index}"]`).val(existingData.user_id);
                 } else if (existingData.type === 'external') {
                     $(`.external-name`).last().val(existingData.name);
                     $(`.external-url`).last().val(existingData.url || '');
@@ -488,19 +434,17 @@ $(document).ready(function() {
         }
     }
 
-    // タイプ変更時のフィールド表示切り替えと初期化
     $(document).on('change', '.coauthor-type', function() {
         const index = $(this).data('index');
         const type = $(this).val();
         const fieldsContainer = $(`.coauthor-fields[data-index="${index}"]`);
         
-        // 古いSelect2を破棄
         fieldsContainer.find('.internal-user-select').select2('destroy');
         
         if (type === 'internal') {
             fieldsContainer.html(`
                 <select class="form-control internal-user-select" data-index="${index}"></select>
-                <input type="hidden" class="internal-user-id" value=""> 
+                <input type="hidden" class="internal-user-id" data-index="${index}" value=""> 
             `);
             const selectElement = $(`.internal-user-select[data-index="${index}"]`);
             initializeUserSearch(selectElement);
@@ -523,19 +467,16 @@ $(document).ready(function() {
         updateCoauthorsData();
     });
 
-    // 共同制作者のテキストフィールドの変更を監視し、データを更新
     $(document).on('input', '.external-name, .external-url', function() {
         updateCoauthorsData();
     });
 
-    // 共同制作者の削除
     $(document).on('click', '.remove-coauthor', function() {
         const index = $(this).data('index');
         $(`.coauthor-item[data-index="${index}"]`).remove();
         updateCoauthorsData();
     });
 
-    // 共同制作者追加ボタン
     $('#add-coauthor-btn').on('click', function() {
         addCoauthorField();
     });

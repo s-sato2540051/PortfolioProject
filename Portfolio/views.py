@@ -282,3 +282,114 @@ def tag_search_api(request):
         })
     
     return JsonResponse({'results': results})
+
+
+@login_required
+def portfolio_edit(request, pk):
+    """ポートフォリオの編集"""
+    portfolio = get_object_or_404(Portfolio, pk=pk)
+    
+    # 作者または共同制作者でない場合は403エラー
+    is_coauthor = portfolio.coauthors.filter(user=request.user).exists()
+    if portfolio.user != request.user and not is_coauthor:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("この作品を編集する権限がありません。")
+    
+    if request.method == "POST":
+        form = PortfolioForm(request.POST, request.FILES, instance=portfolio)
+        if form.is_valid():
+            portfolio = form.save(commit=False)
+            portfolio.save()
+            
+            # タグの更新（既存のタグを削除してから追加）
+            portfolio.tags.clear()
+            tags_data = form.cleaned_data.get('tags', '')
+            if tags_data:
+                tags_data = tags_data.replace("'", "").replace('"', '').replace('[', '').replace(']', '')
+                tag_list = [tag.strip() for tag in tags_data.split(',') if tag.strip()]
+                for tag in tag_list:
+                    portfolio.tags.add(tag)
+            
+            # 追加画像の更新（既存の画像を削除してから追加）
+            portfolio.images.all().delete()
+            for i in range(1, 5):
+                image = form.cleaned_data.get(f'image{i}')
+                if image:
+                    PortfolioImage.objects.create(
+                        portfolio=portfolio,
+                        image=image,
+                        order=i
+                    )
+            
+            # 共同制作者の更新（既存の共同制作者を削除してから追加）
+            portfolio.coauthors.all().delete()
+            coauthors_data = request.POST.get('coauthors_data', '[]')
+            try:
+                coauthors = json.loads(coauthors_data)
+                
+                for coauthor in coauthors:
+                    if coauthor.get('type') == 'internal':
+                        user_id = coauthor.get('user_id', '').strip()
+                        if user_id:
+                            try:
+                                from django.contrib.auth import get_user_model
+                                User = get_user_model()
+                                user = User.objects.get(id=user_id)
+                                CoAuthor.objects.create(portfolio=portfolio, user=user)
+                            except (User.DoesNotExist, ValueError):
+                                pass
+                    elif coauthor.get('type') == 'external':
+                        name = coauthor.get('name', '').strip()
+                        url = coauthor.get('url', '').strip()
+                        if name:
+                            CoAuthor.objects.create(
+                                portfolio=portfolio,
+                                ex_account=f"{name}|{url}" if url else name
+                            )
+            except json.JSONDecodeError:
+                pass
+            
+            return redirect("portfolio_detail", pk=portfolio.pk)
+    else:
+        form = PortfolioForm(instance=portfolio)
+    
+    # 投稿フォームの表示時に使用頻度順にタグを取得
+    popular_tags = Tag.objects.annotate(
+        usage_count=Count('taggit_taggeditem_items')
+    ).filter(usage_count__gt=0).order_by('-usage_count', 'name')[:50]
+    
+    # 既存の共同制作者情報を取得
+    existing_coauthors = []
+    for coauthor in portfolio.coauthors.all():
+        if coauthor.user:
+            existing_coauthors.append({
+                'type': 'internal',
+                'user_id': str(coauthor.user.id),
+                'username': coauthor.user.username,
+                'profile_image': coauthor.user.profile_image.url if coauthor.user.profile_image else '/static/Portfolio/img/default_user.png'
+            })
+        else:
+            if '|' in coauthor.ex_account:
+                name, url = coauthor.ex_account.split('|', 1)
+                existing_coauthors.append({
+                    'type': 'external',
+                    'name': name,
+                    'url': url
+                })
+            else:
+                existing_coauthors.append({
+                    'type': 'external',
+                    'name': coauthor.ex_account,
+                    'url': ''
+                })
+    
+    # 既存の追加画像を取得
+    existing_images = list(portfolio.images.all().order_by('order'))
+    
+    return render(request, "portfolio_create.html", {  # portfolio_create.htmlを使用
+        "form": form,
+        "portfolio": portfolio,  # 編集モードであることを示すため
+        "popular_tags": popular_tags,
+        "existing_coauthors": json.dumps(existing_coauthors),
+        "existing_images": existing_images,
+    })

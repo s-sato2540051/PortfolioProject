@@ -61,3 +61,24 @@ class LoginForm(AuthenticationForm):
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': 'form-control','placeholder': 'パスワード'})
     )
+
+
+class ProfileEditForm(forms.ModelForm):
+    """プロフィール編集用フォーム"""
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'bio', 'profile_image', 'external_link')
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ユーザー名'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'メールアドレス'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'placeholder': '自己紹介', 'rows': 4}),
+            'profile_image': forms.FileInput(attrs={'class': 'form-control'}),
+            'external_link': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com'}),
+        }
+        labels = {
+            'username': 'ユーザー名',
+            'email': 'メールアドレス',
+            'bio': '自己紹介',
+            'profile_image': 'プロフィール画像',
+            'external_link': '外部リンク',
+        }

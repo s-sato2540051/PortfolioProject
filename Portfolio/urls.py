@@ -12,4 +12,6 @@ urlpatterns = [
     path("api/tags/search/", views.tag_search_api, name="tag_search_api"), 
     path('portfolio/<uuid:pk>/', views.portfolio_detail, name='portfolio_detail'),
     path('portfolio/<uuid:pk>/like/', views.like_toggle, name='like_toggle'),
+    path("portfolio/<uuid:pk>/edit/", views.portfolio_edit, name="portfolio_edit"),
 ]
+
