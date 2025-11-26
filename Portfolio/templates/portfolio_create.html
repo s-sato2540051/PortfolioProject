@@ -15,14 +15,19 @@
         <div class="mb-3">
             <label class="form-label">説明</label>
             {{ form.description }}
+            {% for error in form.description.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
         </div>
 
         <div class="mb-3">
             <label class="form-label">サムネイル</label>
             {{ form.thumbnail }}
+            {% for error in form.thumbnail.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
         </div>
 
-        <!-- 追加画像 -->
         <div class="mb-3">
             <label class="form-label">追加画像（最大4枚・任意）</label>
             <div class="row g-3">
@@ -104,7 +109,6 @@
             {% endif %}
         </div>
 
-        <!-- 共同制作者 -->
         <div class="mb-3">
             <label class="form-label">共同制作者（任意）</label>
             <div id="coauthors-container"></div>
@@ -138,6 +142,12 @@
     border-radius: 4px;
     margin: 3px;
 }
+
+/* Select2のユーザー検索結果の画像表示 */
+.select2-container--default .select2-results__option--highlighted[aria-selected] img {
+    border: 1px solid #fff; 
+}
+
 
 .tag-btn {
     font-size: 0.85rem;
@@ -222,30 +232,137 @@
 </style>
 
 <script>
+// portfolio_create.html の <script> タグ内の対応する関数を修正/置き換え
+
+// Select2のユーザー検索結果の表示形式 (画像とユーザー名) - 変更なし
+function formatUserResult(user) {
+    if (!user.id) {
+        return user.text;
+    }
+    const profileImage = user.profile_image || '/static/Portfolio/img/default_user.png';
+    const $container = $(
+        `<span class="d-flex align-items-center">
+            <img src="${profileImage}" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+            <span>${user.text}</span>
+        </span>`
+    );
+    return $container;
+}
+
+// Select2の選択後の表示形式 - ★アイコン表示のために修正★
+function formatUserSelection(user) {
+    if (!user.id) {
+        // プレースホルダーなど、IDがない場合はそのままテキストを返す
+        return user.text; 
+    }
+    const profileImage = user.profile_image || '/static/Portfolio/img/default_user.png';
+    const $container = $(
+        `<span class="d-flex align-items-center">
+            <img src="${profileImage}" class="rounded-circle me-1" style="width: 20px; height: 20px; object-fit: cover;">
+            <span>${user.text}</span>
+        </span>`
+    );
+    return $container;
+}
+
+
+// ユーザー検索Select2の初期化関数
+function initializeUserSearch(selectElement) {
+    selectElement.select2({
+        placeholder: "ユーザー名を入力して検索",
+        allowClear: true,
+        width: '100%',
+        ajax: {
+            url: "{% url 'user_search_api' %}",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    term: params.term 
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results
+                };
+            },
+            cache: true
+        },
+        templateResult: formatUserResult,
+        // ★選択後のアイコン表示のために修正した関数を適用★
+        templateSelection: formatUserSelection, 
+        minimumInputLength: 1
+    });
+    
+    // ユーザーが選択されたら、隠しフィールドにIDを格納し、データ更新関数を呼ぶ
+    selectElement.on('select2:select', function(e) {
+        const data = e.params.data;
+        $(this).closest('.coauthor-item').find('.internal-user-id').val(data.id);
+        updateCoauthorsData();
+    });
+    
+    // 選択が解除されたら、隠しフィールドをクリア
+    selectElement.on('select2:unselect', function(e) {
+        $(this).closest('.coauthor-item').find('.internal-user-id').val('');
+        updateCoauthorsData();
+    });
+    
+    // ★自動フォーカス処理を追加★
+    selectElement.on('select2:open', function() {
+        // Select2の検索フィールドにフォーカスを当てる
+        $('.select2-container--open .select2-search__field').focus();
+    });
+}
+
+
 $(document).ready(function() {
-    // タグ機能の初期化
+    
+    // --- 1. タグ機能の初期化 (Ajax対応) ---
     $('#tag-select').select2({
-        tags: true,
+        tags: true, // 新しいタグの作成を許可
         tokenSeparators: [',', ' '],
         placeholder: "タグを入力または選択してください",
         width: "100%",
         multiple: true,
         allowClear: true,
+        
+        // ★ Ajax設定で全ての既存タグを検索可能に ★
+        ajax: {
+            url: "{% url 'tag_search_api' %}", 
+            dataType: 'json',
+            delay: 250, 
+            data: function (params) {
+                return {
+                    term: params.term // ユーザーが入力した検索語
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results // APIからの結果をそのまま使用
+                };
+            },
+            cache: true
+        },
+        
         language: {
             noResults: function() {
-                return "新しいタグとして追加できます";
+                return "既存のタグが見つかりません。新しいタグとして追加できます";
             },
             searching: function() {
-                return "検索中...";
+                return "タグを検索中...";
             }
-        }
+        },
+        minimumInputLength: 1 
+
     });
     
+    // Select2の値が変更されたら hidden input を更新
     $('#tag-select').on('change', function() {
         var selectedValues = $(this).val() || [];
         var tagsString = selectedValues.join(',');
         $('#tag-input').val(tagsString);
         
+        // 人気のタグボタンの見た目の更新
         $('.tag-btn').each(function() {
             var tagName = $(this).data('tag');
             if (selectedValues.includes(tagName)) {
@@ -256,6 +373,7 @@ $(document).ready(function() {
         });
     });
     
+    // 人気のタグボタンのクリックイベント
     $('.tag-btn').on('click', function(e) {
         e.preventDefault();
         var tagName = $(this).data('tag');
@@ -269,9 +387,11 @@ $(document).ready(function() {
             currentValues.push(tagName);
         }
         
+        // Select2の値を変更し、changeイベントをトリガー
         $('#tag-select').val(currentValues).trigger('change');
     });
     
+    // フォーム送信時に hidden input を再確認
     $('#portfolio-form').on('submit', function() {
         var selectedValues = $('#tag-select').val() || [];
         var tagsString = selectedValues.join(',');
@@ -279,17 +399,61 @@ $(document).ready(function() {
         return true;
     });
 
-    // 共同制作者機能
+    // --- 2. 共同制作者機能 (Ajax検索対応) ---
     let coauthorIndex = 0;
+    
+    // ユーザー検索Select2の初期化関数
+    function initializeUserSearch(selectElement) {
+        selectElement.select2({
+            placeholder: "ユーザー名を入力して検索",
+            allowClear: true,
+            width: '100%',
+            ajax: {
+                url: "{% url 'user_search_api' %}",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        term: params.term 
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.results
+                    };
+                },
+                cache: true
+            },
+            templateResult: formatUserResult,
+            templateSelection: formatUserSelection,
+            minimumInputLength: 1
+        });
+        
+        // ユーザーが選択されたら、隠しフィールドにIDを格納し、データ更新関数を呼ぶ
+        selectElement.on('select2:select', function(e) {
+            const data = e.params.data;
+            $(this).closest('.coauthor-item').find('.internal-user-id').val(data.id);
+            updateCoauthorsData();
+        });
+        
+        // 選択が解除されたら、隠しフィールドをクリア
+        selectElement.on('select2:unselect', function(e) {
+            $(this).closest('.coauthor-item').find('.internal-user-id').val('');
+            updateCoauthorsData();
+        });
+    }
 
+
+    // 共同制作者のデータ（JSON）を更新する関数
     function updateCoauthorsData() {
         const coauthors = [];
         $('.coauthor-item').each(function() {
             const type = $(this).find('.coauthor-type').val();
             if (type === 'internal') {
-                const username = $(this).find('.internal-username').val().trim();
-                if (username) {
-                    coauthors.push({ type: 'internal', username: username });
+                // 内部ユーザーは user_id でデータを渡す
+                const userId = $(this).find('.internal-user-id').val().trim();
+                if (userId) {
+                    coauthors.push({ type: 'internal', user_id: userId }); 
                 }
             } else if (type === 'external') {
                 const name = $(this).find('.external-name').val().trim();
@@ -302,6 +466,7 @@ $(document).ready(function() {
         $('#coauthors-data').val(JSON.stringify(coauthors));
     }
 
+    // 共同制作者フィールドを追加する関数
     function addCoauthorField() {
         const index = coauthorIndex++;
         const html = `
@@ -322,15 +487,30 @@ $(document).ready(function() {
         $('#coauthors-container').append(html);
     }
 
+    // タイプ変更時のフィールド表示切り替えと初期化
+// portfolio_create.html の <script> タグ内、document.ready の中のイベントハンドラを修正/置き換え
+
+// タイプ変更時のフィールド表示切り替えと初期化
     $(document).on('change', '.coauthor-type', function() {
         const index = $(this).data('index');
         const type = $(this).val();
         const fieldsContainer = $(`.coauthor-fields[data-index="${index}"]`);
         
+        // 古いSelect2を破棄
+        fieldsContainer.find('.internal-user-select').select2('destroy');
+        
         if (type === 'internal') {
             fieldsContainer.html(`
-                <input type="text" class="form-control internal-username" placeholder="ユーザー名を入力">
+                <select class="form-control internal-user-select" data-index="${index}"></select>
+                <input type="hidden" class="internal-user-id" value=""> 
             `);
+            // Select2の初期化
+            const selectElement = $(`.internal-user-select[data-index="${index}"]`);
+            initializeUserSearch(selectElement);
+            
+            // ★初期化後、すぐにドロップダウンを開く（一発で入力できるようにする）★
+            selectElement.select2('open'); 
+
         } else if (type === 'external') {
             fieldsContainer.html(`
                 <div class="row g-2">
@@ -348,21 +528,24 @@ $(document).ready(function() {
         updateCoauthorsData();
     });
 
-    $(document).on('input', '.internal-username, .external-name, .external-url', function() {
+    // 共同制作者のテキストフィールドの変更を監視し、データを更新
+    $(document).on('input', '.external-name, .external-url', function() {
         updateCoauthorsData();
     });
 
+    // 共同制作者の削除
     $(document).on('click', '.remove-coauthor', function() {
         const index = $(this).data('index');
         $(`.coauthor-item[data-index="${index}"]`).remove();
         updateCoauthorsData();
     });
 
+    // 共同制作者追加ボタン
     $('#add-coauthor-btn').on('click', function() {
         addCoauthorField();
     });
 
-    // 画像プレビュー機能
+    // --- 3. 画像プレビュー機能 ---
     $('.image-input').on('change', function() {
         const input = this;
         const previewId = $(this).data('preview');

@@ -5,7 +5,6 @@
 
 {% block content %}
 
-<!-- HERO SECTION -->
 <section class="py-5 bg-light text-center">
     <div class="container">
         <h1 class="fw-bold display-5">すべてのクリエイターに、作品を見せられる場所を。</h1>
@@ -25,7 +24,6 @@
     </div>
 </section>
 
-<!-- RECENT WORKS -->
 <section class="container my-5">
     <h2 class="fw-bold mb-4">最近の公開作品</h2>
 
@@ -35,11 +33,17 @@
                 <a href="{% url 'portfolio_detail' p.pk %}" class="text-decoration-none text-dark">
                     <img src="{{ p.thumbnail.url }}" class="img-fluid rounded" style="height:220px; width:100%; object-fit:cover;">
 
-                    <div class="mt-2">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="fw-bold text-truncate" style="font-size: 0.95rem; max-width: 70%;">
-                                {{ p.title|truncatechars:20 }}  
+                            <div class="d-flex align-items-center justify-content-between mt-2">
+                                <div class="fw-bold text-truncate" style="font-size: 0.95rem; max-width: 70%;">
+                                    {{ p.title }}
+                                </div>
+                                <small class="text-muted" style="font-size: 0.75rem;">
+                                    {{ p.created_at|date:"Y/m/d" }}
+                                </small>
                             </div>
+
+                    <div class="mt-0">
+                        <div class="d-flex align-items-center justify-content-between">
 
                             <div>
                                 {% for tag in p.tags.all|slice:":2" %}
@@ -50,19 +54,38 @@
                             </div>
                         </div>
 
-                        <!-- ユーザー情報（クリック可能） -->
-                        <a href="{% url 'user_page' p.user.username %}" class="d-flex align-items-center mt-2 text-decoration-none text-dark">
-                            {% if p.user.profile_image %}
-                                <img src="{{ p.user.profile_image.url }}"
-                                     class="rounded-circle"
-                                     style="width:24px; height:24px; object-fit:cover;">
-                            {% else %}
-                                <img src="{% static 'Portfolio/img/default_user.png' %}"
-                                     class="rounded-circle"
-                                     style="width:24px; height:24px; object-fit:cover;">
-                            {% endif %}
-                            <span class="ms-2" style="font-size: 0.85rem;">{{ p.user.username }}</span>
-                        </a>
+                        <div class="d-flex align-items-center mt-1 flex-wrap">
+                            
+                            <a href="{% url 'user_page' p.user.username %}" title="{{ p.user.username }}" class="d-flex align-items-center text-decoration-none text-dark me-3 mb-1">
+                                {% if p.user.profile_image %}
+                                    <img src="{{ p.user.profile_image.url }}"
+                                            class="rounded-circle"
+                                            style="width:26px; height:26px; object-fit:cover;">
+                                {% else %}
+                                    <img src="{% static 'Portfolio/img/default_user.png' %}"
+                                            class="rounded-circle"
+                                            style="width:26px; height:26px; object-fit:cover;">
+                                {% endif %}
+                                <span class="ms-1" style="font-size: 0.95rem;">{{ p.user.username }}</span>
+                            </a>
+
+                            {% for coauthor in p.coauthors.all %}
+                                {% if coauthor.user and coauthor.user != p.user %}
+                                    <a href="{% url 'user_page' coauthor.user.username %}" title="{{ coauthor.user.username }}" class="d-flex align-items-center text-decoration-none text-dark me-3 mb-1">
+                                        {% if coauthor.user.profile_image %}
+                                            <img src="{{ coauthor.user.profile_image.url }}"
+                                                class="rounded-circle"
+                                                style="width:26px; height:26px; object-fit:cover;">
+                                        {% else %}
+                                            <img src="{% static 'Portfolio/img/default_user.png' %}"
+                                                class="rounded-circle"
+                                                style="width:26px; height:26px; object-fit:cover;">
+                                        {% endif %}
+                                        <span class="ms-1" style="font-size: 0.95rem;">{{ coauthor.user.username }}</span>
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                     </div>
                 </a>
             </div>

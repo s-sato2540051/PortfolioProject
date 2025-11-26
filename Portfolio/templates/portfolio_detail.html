@@ -5,183 +5,287 @@
 
 {% block content %}
 
-<div class="container py-5" style="max-width: 900px;">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
 
-
-    
-    <div class="mb-4">
-        
-        <div class="d-flex align-items-start flex-wrap mb-2">
-
-            <div class="d-flex align-items-center me-4 mb-2">
-                <a href="{% url 'user_page' portfolio.user.username %}" class="text-decoration-none d-flex align-items-center">
-                    {% if portfolio.user.profile_image %}
-                        <img src="{{ portfolio.user.profile_image.url }}" class="rounded-circle me-2" style="width: 50px; height: 50px; object-fit: cover;">
-                    {% else %}
-                        <img src="{% static 'Portfolio/img/default_user.png' %}" class="rounded-circle me-2" style="width: 50px; height: 50px; object-fit: cover;">
-                    {% endif %}
-                    <span class="fw-bold text-dark">{{ portfolio.user.username }}</span>
-                </a>
-            </div>
-            
-            {% if coauthors_processed %}
-                {% for coauthor in coauthors_processed %}
-                    <div class="d-flex align-items-center me-4 mb-2">
-                        {% if coauthor.type == 'internal' %}
-                            <a href="{% url 'user_page' coauthor.user.username %}" class="text-decoration-none d-flex align-items-center" title="{{ coauthor.user.username }}">
-                                {% if coauthor.user.profile_image %}
-                                    <img src="{{ coauthor.user.profile_image.url }}" class="rounded-circle me-2" style="width: 50px; height: 50px; object-fit: cover;">
-                                {% else %}
-                                    <img src="{% static 'Portfolio/img/default_user.png' %}" class="rounded-circle me-2" style="width: 50px; height: 50px; object-fit: cover;">
-                                {% endif %}
-                                <span class="text-dark">{{ coauthor.user.username }}</span>
-                            </a>
-                        {% elif coauthor.type == 'external' %}
-                            <a href="{{ coauthor.url }}" target="_blank" class="text-decoration-none d-flex align-items-center" title="{{ coauthor.name }}">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 50px; height: 50px; background-color: {{ coauthor.bg_color|default:'#6c757d' }};">
-                                    <i class="bi {{ coauthor.icon }} text-white" style="font-size: 1.5rem;"></i>
-                                </div>
-                                <span class="text-dark">{{ coauthor.name }}</span>
-                            </a>
+            <div class="d-flex align-items-center justify-content-between flex-wrap mb-4 py-3 border-bottom">
+                
+                <div class="d-flex align-items-center flex-wrap">
+                    <a href="{% url 'user_page' portfolio.user.username %}" class="text-decoration-none d-flex align-items-center me-4 mb-2">
+                        {% if portfolio.user.profile_image %}
+                            <img src="{{ portfolio.user.profile_image.url }}" class="rounded-circle me-2" style="width: 45px; height: 45px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'Portfolio/img/default_user.png' %}" class="rounded-circle me-2" style="width: 45px; height: 45px; object-fit: cover;">
                         {% endif %}
-                    </div>
-                {% endfor %}
-            {% endif %}
-
-            {% if request.user == portfolio.user %}
-                <div class="d-flex align-items-center ms-auto mb-2">
-                    <a href="#" class="btn btn-outline-primary me-2">編集</a>
-                    <a href="#" class="btn btn-outline-danger">削除</a>
+                        <span class="fw-bold text-dark">{{ portfolio.user.username }}</span>
+                    </a>
+                    
+                    {% for coauthor in coauthors_processed %}
+                        <div class="d-flex align-items-center me-4 mb-2">
+                            {% if coauthor.type == 'internal' %}
+                                <a href="{% url 'user_page' coauthor.user.username %}" class="text-decoration-none d-flex align-items-center" title="{{ coauthor.user.username }}">
+                                    {% if coauthor.user.profile_image %}
+                                        <img src="{{ coauthor.user.profile_image.url }}" class="rounded-circle me-2" style="width: 45px; height: 45px; object-fit: cover;">
+                                    {% else %}
+                                        <img src="{% static 'Portfolio/img/default_user.png' %}" class="rounded-circle me-2" style="width: 45px; height: 45px; object-fit: cover;">
+                                    {% endif %}
+                                    <span class="text-muted">{{ coauthor.user.username }}</span>
+                                </a>
+                            {% elif coauthor.type == 'external' %}
+                                <a href="{{ coauthor.url }}" target="_blank" class="text-decoration-none d-flex align-items-center" title="{{ coauthor.name }}">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2 border" style="width: 45px; height: 45px; background-color: {{ coauthor.bg_color|default:'#f8f9fa' }};">
+                                        <i class="bi {{ coauthor.icon }} text-secondary" style="font-size: 1.2rem;"></i>
+                                    </div>
+                                    <span class="text-muted">{{ coauthor.name }}</span>
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
                 </div>
-            {% endif %}
-        </div>
-        
-        <small class="text-muted d-block mb-3">{{ portfolio.created_at|date:"Y年m月d日" }}</small>
 
-
-        
-        <h2 class="fw-bold mb-2">{{ portfolio.title }}</h2>
-        
-        <div class="mb-3">
-            {% for tag in portfolio.tags.all %}
-                <span class="badge bg-secondary me-1">{{ tag.name }}</span>
-            {% endfor %}
-        </div>
-    </div>
-
-    <div class="mb-2 position-relative thumbnail-container">
-        {% if portfolio.external_link %}
-            <a href="{{ portfolio.external_link }}" target="_blank" class="thumbnail-link">
-                <img src="{{ portfolio.thumbnail.url }}" class="img-fluid rounded w-100" style="max-height: 600px; object-fit: cover;">
-                <div class="external-link-icon">
-                    <i class="bi bi-box-arrow-up-right"></i>
-                </div>
-            </a>
-        {% else %}
-            <img src="{{ portfolio.thumbnail.url }}" class="img-fluid rounded w-100" style="max-height: 600px; object-fit: cover;">
-        {% endif %}
-    </div>
-
-    {% if portfolio.external_link %}
-    <div class="mb-4">
-        <a href="{{ portfolio.external_link }}" target="_blank" class="text-decoration-none" style="font-size: 0.85rem;">
-            <i class="bi bi-link-45deg text-primary"></i>
-            <span class="text-primary">{{ portfolio.external_link|truncatechars:50 }}</span>
-        </a>
-    </div>
-    {% endif %}
-
-    <div class="mb-4">
-        <h5 class="fw-bold mb-3">作品について</h5>
-        <p style="white-space: pre-wrap;">{{ portfolio.description }}</p>
-    </div>
-
-    <div class="mb-4">
-        <h5 class="fw-bold mb-3">追加画像</h5>
-        {% if portfolio.images.all %}
-            <div class="row g-3">
-                {% for image in portfolio.images.all %}
-                    <div class="col-6">
-                        <img src="{{ image.image.url }}" class="img-fluid rounded" style="width: 100%; height: 250px; object-fit: cover; cursor: pointer;" onclick="openImageModal('{{ image.image.url }}')">
+                {% if request.user == portfolio.user %}
+                    <div class="d-flex align-items-center ms-auto mb-2">
+                        <a href="#" class="btn btn-sm btn-outline-primary me-2">編集</a>
+                        <a href="#" class="btn btn-sm btn-outline-danger">削除</a>
                     </div>
-                {% endfor %}
+                {% endif %}
             </div>
-        {% else %}
-            <p class="text-muted">追加画像はありません</p>
-        {% endif %}
+
+            <h1 class="fw-bold mb-2 display-4">{{ portfolio.title }}</h1>
+            
+            <div class="mb-4 d-flex align-items-center">
+                <small class="text-muted me-3">{{ portfolio.created_at|date:"Y年m月d日" }}</small>
+                
+                <div>
+                    {% for tag in portfolio.tags.all %}
+                        <span class="badge bg-secondary me-1">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-5 position-relative thumbnail-container">
+                {% if portfolio.external_link %}
+                    <a href="{{ portfolio.external_link }}" target="_blank" class="thumbnail-link">
+                        <img src="{{ portfolio.thumbnail.url }}" class="img-fluid rounded w-100 shadow-sm" style="max-height: 600px; object-fit: cover;">
+                        <div class="external-link-icon">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                        </div>
+                    </a>
+                {% else %}
+                    <img src="{{ portfolio.thumbnail.url }}" class="img-fluid rounded w-100 shadow-sm" style="max-height: 600px; object-fit: cover;">
+                {% endif %}
+            </div>
+
+            <div class="mb-5 py-4 border-top border-bottom">
+                <h2 class="h5 fw-bold mb-3 text-primary">作品について</h2>
+                <p class="lead" style="white-space: pre-wrap;">{{ portfolio.description }}</p>
+                
+                {% if portfolio.external_link %}
+                <div class="mt-4">
+                    <span class="fw-bold text-muted">公開リンク: </span>
+                    <a href="{{ portfolio.external_link }}" target="_blank" class="text-decoration-none">
+                        <span class="text-primary">{{ portfolio.external_link|truncatechars:50 }}</span>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-5">
+                <h2 class="h5 fw-bold mb-3 text-primary">追加画像</h2>
+                {% if portfolio.images.all %}
+                    <div class="row g-3">
+                        {% for image in portfolio.images.all %}
+                            <div class="col-6 col-md-4">
+                                <img src="{{ image.image.url }}" class="img-fluid rounded shadow-sm hover-opacity" 
+                                     style="width: 100%; height: 200px; object-fit: cover; cursor: pointer;" 
+                                     onclick="openImageModal('{{ image.image.url }}')">
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">追加画像はありません</p>
+                {% endif %}
+            </div>
+
+            <div class="mb-5 text-center py-4 border-top">
+                <div class="like-container">
+                    
+                    {% if user.is_authenticated %}
+                        <button 
+                            id="like-btn" 
+                            data-portfolio-id="{{ portfolio.pk }}" 
+                            class="btn btn-sm {% if is_liked %}btn-danger{% else %}btn-outline-danger{% endif %}" 
+                            style="min-width: 120px;"
+                        >
+                            <i class="bi bi-heart{% if is_liked %}-fill{% endif %} me-1"></i> 
+                            <span class="button-text">{% if is_liked %}いいね解除{% else %}いいね{% endif %}</span> 
+                            (<span id="like-count-btn">{{ portfolio.likes.count }}</span>)
+                        </button>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-heart me-1"></i> ログインしていいね ({{ portfolio.likes.count }})
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
     </div>
-
-    <div class="mb-4">
-        <button class="btn btn-outline-danger">
-            <i class="bi bi-heart"></i> いいね
-        </button>
-        <span class="ms-2 text-muted">{{ portfolio.likes.count }} いいね</span>
-    </div>
-
-
-
 </div>
 
 <div class="modal fade" id="imageModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-md"> 
         <div class="modal-content bg-transparent border-0">
             <div class="modal-body p-0">
-                <img src="" id="modalImage" class="img-fluid rounded w-100">
-                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                <img src="" id="modalImage" class="img-fluid rounded w-100 shadow-lg">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
+/* メイン画像/サムネイルのホバーエフェクト（前回のものを維持） */
 .thumbnail-container {
     position: relative;
     overflow: hidden;
     border-radius: 8px;
 }
-
+/* ... (中略: その他のCSSを省略) ... */
 .thumbnail-link {
     display: block;
     position: relative;
     text-decoration: none;
 }
-
 .thumbnail-link img {
     transition: transform 0.3s ease, filter 0.3s ease;
 }
-
 .thumbnail-link:hover img {
-    transform: scale(1.014);
+    transform: scale(1.005);
     filter: brightness(0.95);
 }
-
 .external-link-icon {
     position: absolute;
     top: 15px;
     right: 15px;
     background: rgba(0, 0, 0, 0.7);
     color: white;
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1rem;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
-
 .thumbnail-link:hover .external-link-icon {
     opacity: 1;
+}
+.hover-opacity:hover {
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
 }
 </style>
 
 <script>
 function openImageModal(imageUrl) {
     document.getElementById('modalImage').src = imageUrl;
+    // モーダルサイズをmodal-md (中サイズ)に設定しているため、過度な拡大はされない
     var modal = new bootstrap.Modal(document.getElementById('imageModal'));
     modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const likeButton = document.getElementById('like-btn');
+    // ボタン内部のカウント要素IDに変更
+    const likeCountSpan = document.getElementById('like-count-btn'); 
+
+    if (likeButton) {
+        likeButton.addEventListener('click', function() {
+            const portfolioId = this.dataset.portfolioId;
+            const url = `/portfolio/${portfolioId}/like/`; 
+            
+            likeButton.disabled = true;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') 
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'ok') {
+                    // 1. ボタン内のカウントを更新
+                    if (likeCountSpan) {
+                       likeCountSpan.textContent = data.like_count;
+                    }
+
+                    // 2. ボタンの見た目を切り替え
+                    const icon = likeButton.querySelector('i');
+                    const textSpan = likeButton.querySelector('.button-text');
+
+                    if (data.is_liked) {
+                        // いいねした後の状態
+                        likeButton.classList.remove('btn-outline-danger');
+                        likeButton.classList.add('btn-danger');
+                        if (icon) {
+                            icon.classList.remove('bi-heart');
+                            icon.classList.add('bi-heart-fill');
+                        }
+                        if (textSpan) {
+                            textSpan.textContent = 'いいね';
+                        }
+                    } else {
+                        // いいね解除した後の状態
+                        likeButton.classList.remove('btn-danger');
+                        likeButton.classList.add('btn-outline-danger');
+                        if (icon) {
+                            icon.classList.remove('bi-heart-fill');
+                            icon.classList.add('bi-heart');
+                        }
+                        if (textSpan) {
+                            textSpan.textContent = 'いいね'; // (カウントは括弧内に表示される)
+                        }
+                    }
+                } else {
+                    alert('いいねの処理中にエラーが発生しました。');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('通信エラーが発生しました。');
+            })
+            .finally(() => {
+                likeButton.disabled = false;
+            });
+        });
+    }
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
 </script>
 

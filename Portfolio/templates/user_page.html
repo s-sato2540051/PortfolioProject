@@ -34,15 +34,39 @@
                         <div class="fw-bold text-truncate" style="font-size: 0.95rem; max-width: 70%;">
                             {{ p.title }}
                         </div>
-                        <div>
-                            {% for tag in p.tags.all %}
-                                <span class="badge bg-secondary" style="font-size: 0.65rem;">
-                                    {{ tag.name }}
-                                </span>
-                            {% endfor %}
-                        </div>
+                        <small class="text-muted" style="font-size: 0.75rem;">
+                            {{ p.created_at|date:"Y/m/d" }}
+                        </small>
                     </div>
-                </a>
+                    
+                    <div class="d-flex align-items-center mt-1 flex-wrap">
+                        <a href="{% url 'user_page' p.user.username %}" title="{{ p.user.username }}" class="d-flex align-items-center text-decoration-none text-dark me-2">
+                            {% if p.user.profile_image %}
+                                <img src="{{ p.user.profile_image.url }}"
+                                        class="rounded-circle"
+                                        style="width:26px; height:26px; object-fit:cover;"> {% else %}
+                                <img src="{% static 'Portfolio/img/default_user.png' %}"
+                                        class="rounded-circle"
+                                        style="width:26px; height:26px; object-fit:cover;"> {% endif %}
+                            <span class="ms-1" style="font-size: 0.95rem;">{{ p.user.username }}</span>
+                        </a>
+
+                        {% for coauthor in p.coauthors.all %}
+                            {% if coauthor.user and coauthor.user != p.user %}
+                                <a href="{% url 'user_page' coauthor.user.username %}" title="{{ coauthor.user.username }}" class="d-flex align-items-center text-decoration-none text-dark me-2">
+                                    {% if coauthor.user.profile_image %}
+                                        <img src="{{ coauthor.user.profile_image.url }}"
+                                            class="rounded-circle"
+                                            style="width:26px; height:26px; object-fit:cover;"> {% else %}
+                                        <img src="{% static 'Portfolio/img/default_user.png' %}"
+                                            class="rounded-circle"
+                                            style="width:26px; height:26px; object-fit:cover;"> {% endif %}
+                                    <span class="ms-1" style="font-size: 0.95rem;">{{ coauthor.user.username }}</span>
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    </a>
             </div>
         {% empty %}
             <p class="text-center text-muted">公開作品がありません。</p>

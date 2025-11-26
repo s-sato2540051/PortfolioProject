@@ -26,6 +26,7 @@ class Portfolio(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     tags = TaggableManager(through=UUIDTaggedItem) 
     external_link = models.URLField(blank=True, null=True)
+    liked_by = models.ManyToManyField(User,through='Like',related_name='liked_portfolios')
 
     def __str__(self):
         return self.title
