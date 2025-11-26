@@ -256,7 +256,6 @@
 </style>
 
 <script>
-// Select2のユーザー検索結果の表示形式
 function formatUserResult(user) {
     if (!user.id) {
         return user.text;
@@ -271,7 +270,6 @@ function formatUserResult(user) {
     return $container;
 }
 
-// Select2の選択後の表示形式
 function formatUserSelection(user) {
     if (!user.id) {
         return user.text; 
@@ -286,7 +284,7 @@ function formatUserSelection(user) {
     return $container;
 }
 
-// ユーザー検索Select2の初期化関数
+
 function initializeUserSearch(selectElement) {
     selectElement.select2({
         placeholder: "ユーザー名を入力して検索",
@@ -331,7 +329,7 @@ function initializeUserSearch(selectElement) {
 
 $(document).ready(function() {
     
-    // --- 1. タグ機能の初期化 (Ajax対応) ---
+
     $('#tag-select').select2({
         tags: true,
         tokenSeparators: [',', ' '],
@@ -368,7 +366,6 @@ $(document).ready(function() {
         minimumInputLength: 1 
     });
     
-    // 編集モードの場合、既存のタグをSelect2に設定
     {% if portfolio %}
     const existingTags = [{% for tag in portfolio.tags.all %}"{{ tag.name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
     if (existingTags.length > 0) {
@@ -376,13 +373,11 @@ $(document).ready(function() {
     }
     {% endif %}
     
-    // Select2の値が変更されたら hidden input を更新
     $('#tag-select').on('change', function() {
         var selectedValues = $(this).val() || [];
         var tagsString = selectedValues.join(',');
         $('#tag-input').val(tagsString);
         
-        // 人気のタグボタンの見た目の更新
         $('.tag-btn').each(function() {
             var tagName = $(this).data('tag');
             if (selectedValues.includes(tagName)) {
@@ -393,7 +388,6 @@ $(document).ready(function() {
         });
     });
     
-    // 人気のタグボタンのクリックイベント
     $('.tag-btn').on('click', function(e) {
         e.preventDefault();
         var tagName = $(this).data('tag');
@@ -410,7 +404,6 @@ $(document).ready(function() {
         $('#tag-select').val(currentValues).trigger('change');
     });
     
-    // フォーム送信時に hidden input を再確認
     $('#portfolio-form').on('submit', function() {
         var selectedValues = $('#tag-select').val() || [];
         var tagsString = selectedValues.join(',');
@@ -418,10 +411,8 @@ $(document).ready(function() {
         return true;
     });
 
-    // --- 2. 共同制作者機能 (Ajax検索対応) ---
     let coauthorIndex = 0;
     
-    // 編集モードの場合、既存の共同制作者を読み込む
     {% if existing_coauthors %}
     const existingCoauthors = {{ existing_coauthors|safe }};
     existingCoauthors.forEach(coauthor => {
@@ -429,7 +420,6 @@ $(document).ready(function() {
     });
     {% endif %}
     
-    // 共同制作者のデータ（JSON）を更新する関数
     function updateCoauthorsData() {
         const coauthors = [];
         $('.coauthor-item').each(function() {
@@ -450,7 +440,6 @@ $(document).ready(function() {
         $('#coauthors-data').val(JSON.stringify(coauthors));
     }
 
-    // 共同制作者フィールドを追加する関数
     function addCoauthorField(existingData = null) {
         const index = coauthorIndex++;
         const html = `
@@ -470,7 +459,6 @@ $(document).ready(function() {
         `;
         $('#coauthors-container').append(html);
         
-        // 既存データがある場合は初期化
         if (existingData) {
             setTimeout(() => {
                 $(`.coauthor-type[data-index="${index}"]`).trigger('change');
@@ -488,13 +476,12 @@ $(document).ready(function() {
         }
     }
 
-    // タイプ変更時のフィールド表示切り替えと初期化
+
     $(document).on('change', '.coauthor-type', function() {
         const index = $(this).data('index');
         const type = $(this).val();
         const fieldsContainer = $(`.coauthor-fields[data-index="${index}"]`);
         
-        // 古いSelect2を破棄
         fieldsContainer.find('.internal-user-select').select2('destroy');
         
         if (type === 'internal') {
@@ -523,24 +510,20 @@ $(document).ready(function() {
         updateCoauthorsData();
     });
 
-    // 共同制作者のテキストフィールドの変更を監視し、データを更新
     $(document).on('input', '.external-name, .external-url', function() {
         updateCoauthorsData();
     });
 
-    // 共同制作者の削除
     $(document).on('click', '.remove-coauthor', function() {
         const index = $(this).data('index');
         $(`.coauthor-item[data-index="${index}"]`).remove();
         updateCoauthorsData();
     });
 
-    // 共同制作者追加ボタン
     $('#add-coauthor-btn').on('click', function() {
         addCoauthorField();
     });
 
-    // --- 3. 画像プレビュー機能 ---
     $('.image-input').on('change', function() {
         const input = this;
         const previewId = $(this).data('preview');
