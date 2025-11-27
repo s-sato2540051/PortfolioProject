@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-1&us(scounw_!vcexophuulmwrey5h#zu41-h-l3%)t=qay+jv'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -160,16 +160,14 @@ LOGOUT_REDIRECT_URL = 'home'
 
 
 
-# Email設定（開発環境用：コンソールにメールを表示）
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# 本番環境の場合は以下のような設定を使用
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-#DEFAULT_FROM_EMAIL = 'spr2540051@stu.o-hara.ac.jp'
-#EMAIL_HOST = 'smtp-mail.outlook.com'
-#EMAIL_PORT = '587'
-#EMAIL_HOST_USER = 'spr2540051@stu.o-hara.ac.jp'
-#EMAIL_HOST_PASSWORD = 'Syuu0301'
-#EMAIL_USE_TLS = 'True'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+DEFAULT_FROM_EMAIL = 'spr2540051@stu.o-hara.ac.jp'
+EMAIL_HOST = 'smtp-mail.outlook.com'
+EMAIL_PORT = '587'
+EMAIL_HOST_USER = 'spr2540051@stu.o-hara.ac.jp'
+EMAIL_HOST_PASSWORD = 'Syuu0301'
+EMAIL_USE_TLS = 'True'
 
 TAGGIT_TAGS_FROM_STRING = 'taggit.utils.parse_tags'

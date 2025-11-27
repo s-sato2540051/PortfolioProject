@@ -7,7 +7,6 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
     
-    # パスワードリセット機能
     path('password_reset/', auth_views.PasswordResetView.as_view(
         template_name='password_reset.html',
         email_template_name='password_reset_email.html',

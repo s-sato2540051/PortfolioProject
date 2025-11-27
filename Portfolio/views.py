@@ -214,13 +214,11 @@ def portfolio_create(request):
 
 
 def logout_view(request):
-    """ログアウト（GETでもPOSTでも対応）"""
     logout(request)
     return redirect('home')
 
 
 def user_search_api(request):
-    """ユーザー検索API（Select2用）"""
     from django.contrib.auth import get_user_model
     
     User = get_user_model()
@@ -430,7 +428,7 @@ def contact_user_view(request, username):
                 messages.error(request, 'メッセージ送信中にエラーが発生しました。')
 
     else:
-        # GETリクエストの場合
+        # GETだったら
         form = UserContactForm()
         
     return render(request, 'contact_user.html', {

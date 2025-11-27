@@ -35,7 +35,7 @@ def logout_view(request):
 
 @login_required
 def profile_edit(request):
-    """プロフィール編集"""
+
     if request.method == "POST":
         form = ProfileEditForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
