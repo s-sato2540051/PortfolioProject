@@ -82,3 +82,20 @@ class ProfileEditForm(forms.ModelForm):
             'profile_image': 'プロフィール画像',
             'external_link': '外部リンク',
         }
+        
+class ContactForm(forms.Form):
+    name = forms.CharField(
+        label='お名前',
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'お名前'})
+    )
+    
+    email = forms.EmailField(
+        label='メールアドレス',
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'name@example.com'})
+    )
+    
+    message = forms.CharField(
+        label='お問い合わせ内容',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'お問い合わせ内容をご記入ください'})
+    )

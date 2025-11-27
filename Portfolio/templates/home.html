@@ -46,10 +46,12 @@
                         <div class="d-flex align-items-center justify-content-between">
 
                             <div>
-                                {% for tag in p.tags.all|slice:":2" %}
+                                {% for tag in p.tags.all|slice:":6" %}
+                                    <a href="{% url 'portfolios_by_tag' tag.slug %}" class="text-decoration-none">
                                     <span class="badge bg-secondary" style="font-size: 0.65rem;">
                                         {{ tag.name }}
                                     </span>
+                                </a>
                                 {% endfor %}
                             </div>
                         </div>

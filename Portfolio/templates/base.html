@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
     <style>
-        /* ログアウトボタンをリンクと同じ見た目に */
+        /* ログアウトボタンをごり押しでいい感じに */
         .logout-btn {
             background: transparent;
             border: none;
@@ -63,6 +63,17 @@
                             Home
                         </a>
                     </li>
+
+                    <!-- 間に合わないから消す
+
+                    <li class="nav-item">
+                        <a class="nav-link { if request.resolver_match.url_name == 'support_contact' }active{ endif }"
+                           href="{ url 'support_contact' }">
+                            Support
+                        </a>
+                    </li>
+
+                    -->
 
                     {% if request.user.is_authenticated %}
                         <!--ログイン-->

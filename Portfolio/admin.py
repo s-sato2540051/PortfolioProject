@@ -41,3 +41,5 @@ class PortfolioAdmin(admin.ModelAdmin):
             "classes": ("collapse",)
         }),
     )
+
+

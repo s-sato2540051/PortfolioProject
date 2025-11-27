@@ -19,3 +19,7 @@ https://django-taggit.readthedocs.io/en/latest/
 https://zenn.dev/tmasuyama1114/articles/django-tutorial-blogapp-1
 
 https://bootstrap-utilities-cheatsheet.vercel.app/
+
+
+todo
+サポート直す、本番環境に移行、localじゃないやつにぶち込む

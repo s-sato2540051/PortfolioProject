@@ -1,5 +1,5 @@
 from django import forms
-from .models import Portfolio, PortfolioImage, CoAuthor, Contact
+from .models import Portfolio, PortfolioImage, CoAuthor
 from taggit.models import Tag
 from django.db.models import Count
 
@@ -34,67 +34,20 @@ class PortfolioForm(forms.ModelForm):
         # 既存のタグを初期値として設定
         if self.instance.pk:
             self.initial['tags'] = ','.join([tag.name for tag in self.instance.tags.all()])
-
-
-class SupportContactForm(forms.ModelForm):
-    """運営へのお問い合わせフォーム"""
-    class Meta:
-        model = Contact
-        fields = ['sender_name', 'sender_email', 'subject', 'message']
-        widgets = {
-            'sender_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'お名前'
-            }),
-            'sender_email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'メールアドレス'
-            }),
-            'subject': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': '件名'
-            }),
-            'message': forms.Textarea(attrs={
-                'class': 'form-control',
-                'placeholder': 'お問い合わせ内容',
-                'rows': 6
-            }),
-        }
-        labels = {
-            'sender_name': 'お名前',
-            'sender_email': 'メールアドレス',
-            'subject': '件名',
-            'message': 'お問い合わせ内容',
-        }
-
-
-class PortfolioContactForm(forms.ModelForm):
-    """作品作者へのコンタクトフォーム"""
-    class Meta:
-        model = Contact
-        fields = ['sender_name', 'sender_email', 'subject', 'message']
-        widgets = {
-            'sender_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'お名前'
-            }),
-            'sender_email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'メールアドレス'
-            }),
-            'subject': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': '件名'
-            }),
-            'message': forms.Textarea(attrs={
-                'class': 'form-control',
-                'placeholder': 'メッセージ',
-                'rows': 6
-            }),
-        }
-        labels = {
-            'sender_name': 'お名前',
-            'sender_email': 'メールアドレス',
-            'subject': '件名',
-            'message': 'メッセージ',
-        }
+            
+class UserContactForm(forms.Form):
+    name = forms.CharField(
+        label='お名前',
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'お名前'})
+    )
+    
+    email = forms.EmailField(
+        label='メールアドレス',
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'name@example.com'})
+    )
+    
+    message = forms.CharField(
+        label='お問い合わせ内容',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'お問い合わせ内容をご入力ください'})
+    )

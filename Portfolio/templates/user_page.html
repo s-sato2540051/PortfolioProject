@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
+
 {% block content %}
 
 <div class="container py-4">
@@ -16,10 +17,15 @@
             <p class="text-muted">{{ page_user.bio }}</p>
         {% endif %}
         {% if page_user.external_link %}
-            <a href="{{ page_user.external_link }}" target="_blank" class="btn btn-sm btn-outline-primary">
+            <a href="{{ page_user.external_link }}" target="_blank" class="btn btn-sm btn-outline-primary mb-2">
                 外部リンク
             </a>
         {% endif %}
+        
+        <a href="{% url 'contact_user' username=page_user.username %}" class="btn btn-sm btn-secondary d-block mx-auto" style="max-width: 150px;">
+            メッセージを送る
+        </a>
+        
     </div>
 
     <h5 class="mb-3">公開作品</h5>

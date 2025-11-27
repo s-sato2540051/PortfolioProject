@@ -5,7 +5,6 @@ from django.db.models import Count, Q
 from django.http import JsonResponse 
 import json
 
-from django.contrib.auth.decorators import login_required 
 from django.views.decorators.http import require_POST 
 from django.http import JsonResponse, Http404
 from django.db import IntegrityError 
@@ -13,6 +12,12 @@ from django.db import IntegrityError
 from .models import Portfolio, PortfolioImage, CoAuthor ,Like 
 from .forms import PortfolioForm
 from taggit.models import Tag
+
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib import messages 
+from django.contrib.auth import get_user_model
+from .forms import UserContactForm
 
 
 def home(request):
@@ -110,9 +115,6 @@ def portfolio_detail(request, pk):
 @login_required
 @require_POST 
 def like_toggle(request, pk):
-    """
-    作品のいいねを切り替える (トグル) API
-    """
     try:
         portfolio = Portfolio.objects.get(pk=pk)
     except Portfolio.DoesNotExist:
@@ -369,3 +371,70 @@ def portfolio_edit(request, pk):
     })
     
 
+
+def portfolios_by_tag(request, tag_slug):
+    tag = get_object_or_404(Tag, slug=tag_slug)
+    portfolios = Portfolio.objects.filter(tags__slug=tag_slug)
+    context = {
+        'tag': tag,
+        'portfolios': portfolios
+    }
+    return render(request, 'portfolios_by_tag.html', context)
+
+User = get_user_model()
+
+def contact_user_view(request, username):
+    recipient_user = get_object_or_404(User, username=username)
+    
+    if request.method == 'POST':
+        form = UserContactForm(request.POST)
+        
+        if form.is_valid():
+            sender_name = form.cleaned_data['name']
+            sender_email = form.cleaned_data['email']
+            message_body = form.cleaned_data['message']
+            
+            recipient_email = recipient_user.email 
+            
+            subject = f'【ユーザーページ経由】{recipient_user.username}様へのメッセージ: {sender_name}より'
+            
+            email_body = f"""
+            {recipient_user.username}様
+
+            あなたにメッセージが届きました。
+            
+            ------------------------------------------------
+            送信者名: {sender_name}
+            送信者の返信先メールアドレス: {sender_email}
+            
+            メッセージ内容:
+            {message_body}
+            ------------------------------------------------
+            
+            メッセージに返信する場合は、直接 {sender_email} あてにお願いします
+            """
+            
+            try:
+                send_mail(
+                    subject,
+                    email_body,
+                    settings.DEFAULT_FROM_EMAIL, 
+                    [recipient_email],          
+                    fail_silently=False,
+                )
+                
+                messages.success(request, f'{recipient_user.username}様へメッセージを送信しました。')
+                return redirect('user_page', username=username) 
+
+            except Exception as e:
+                messages.error(request, 'メッセージ送信中にエラーが発生しました。')
+
+    else:
+        # GETリクエストの場合
+        form = UserContactForm()
+        
+    return render(request, 'contact_user.html', {
+        'form': form,
+        'page_user': recipient_user
+    })
+    

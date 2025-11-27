@@ -13,5 +13,9 @@ urlpatterns = [
     path('portfolio/<uuid:pk>/', views.portfolio_detail, name='portfolio_detail'),
     path('portfolio/<uuid:pk>/like/', views.like_toggle, name='like_toggle'),
     path("portfolio/<uuid:pk>/edit/", views.portfolio_edit, name="portfolio_edit"),
+    path('tag/<slug:tag_slug>/', views.portfolios_by_tag, name='portfolios_by_tag'),
+    
+    path('support/', views.UserContactForm, name='support'),
+    path('user/<str:username>/contact/', views.contact_user_view, name='contact_user'), 
 ]
 
